@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translation Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .translation {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            white-space: pre-line;
+        }
+
+        #inputText {
+            width: 100%;
+            height: 100px;
+            resize: none;
+        }
+
+        button:active {
+            background-color: #ccc;
+        }
+
+        .copy-button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <label for="inputText">Texto a ser traduzido:</label><br>
+        <textarea id="inputText" name="inputText" rows="4">br.com.navita.connect.portal.emm.dto.InstallStateDTO.INSTALLED=Instalação
+br.com.navita.connect.portal.emm.dto.InstallStateDTO.INSTALLED=Casa</textarea>
+        <br>
+        <button onclick="translateText()">Traduzir</button>
+    </div>
+
+    <div class="container">
+        <h1>Translation Result</h1>
+        <div id="translationResults"></div>
+    </div>
+
+    <script>
+        function convertAccentedToUnicode(inputString) {
+            const unicodeArray = Array.from(inputString).map(char => {
+                if (char.normalize('NFD').length > 1) {
+                    return '\\u' + char.charCodeAt(0).toString(16).padStart(4, '0');
+                } else {
+                    return char;
+                }
+            });
+            const outputString = unicodeArray.join('');
+            return outputString;
+        }
+
+        async function translateText() {
+            let textoASerTraduzido = document.getElementById("inputText").value;
+            let idiomaRaiz = "";
+
+            const targetLanguages = ['de', 'en_AU', 'en', 'es', 'fr', 'pt'];
+            const translationResults = {};
+
+            // Split the input text into lines
+            const lines = textoASerTraduzido.split('\n');
+
+            for (let j = 0; j < lines.length; j++) {
+                const line = lines[j];
+
+                for (let i = 0; i < targetLanguages.length; i++) {
+                    const targetLanguage = targetLanguages[i];
+                    let apiUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=pt&tl=${targetLanguage}&dt=t&q=${line}`;
+
+                    try {
+                        const response = await fetch(apiUrl);
+                        const data = await response.json();
+                        const translation = data[0][0][0];
+                        if (!translationResults[targetLanguage]) {
+                            translationResults[targetLanguage] = [];
+                        }
+                        translationResults[targetLanguage].push(convertAccentedToUnicode(translation));
+                    } catch (error) {
+                        console.error(error);
+                        if (!translationResults[targetLanguage]) {
+                            translationResults[targetLanguage] = [];
+                        }
+                        translationResults[targetLanguage].push('Erro ao traduzir');
+                    }
+                }
+            }
+
+            displayTranslations(translationResults);
+        }
+
+        function displayTranslations(translationResults) {
+            const translationContainer = document.getElementById("translationResults");
+            translationContainer.innerHTML = '';
+
+            for (const [language, translations] of Object.entries(translationResults)) {
+                const translationDiv = document.createElement('div');
+                translationDiv.classList.add('translation');
+                translationDiv.id = language + '-translation'; // Assign unique id
+                translationDiv.innerHTML = `<strong>${language.toUpperCase()}:</strong>\n${translations.join('\n')}`;
+                translationContainer.appendChild(translationDiv);
+
+                // Add copy button for each language
+                const copyButton = document.createElement('button');
+                copyButton.textContent = 'Copiar';
+                copyButton.classList.add('copy-button');
+                copyButton.onclick = function() {
+                    copyText(language);
+                };
+                translationDiv.appendChild(copyButton);
+            }
+        }
+
+        function copyText(language) {
+            const translationText = document.getElementById(language + '-translation').innerText;
+            navigator.clipboard.writeText(translationText)
+                .then(() => {
+                    console.log("translationText:", translationText);
+                })
+                .catch(err => {
+                    console.error('Erro ao copiar o texto: ', err);
+                    alert("Erro ao copiar o texto. Por favor, copie manualmente.");
+                });
+        }
+    </script>
+</body>
+
+</html>
