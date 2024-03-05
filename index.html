@@ -54,11 +54,17 @@ br.com.navita.connect.portal.emm.dto.InstallStateDTO.INSTALLED=Casa</textarea>
         <br>
         <button onclick="translateText()">Traduzir</button>
     </div>
+    <div class="container">
+        <label for="toggleCheckbox">Converter caracteres acentuados para Unicode:</label>
+        <input type="checkbox" value="true" id="toggleCheckbox" checked>
+    </div>
 
     <div class="container">
         <h1>Translation Result</h1>
         <div id="translationResults"></div>
     </div>
+
+
 
     <script>
         function convertAccentedToUnicode(inputString) {
@@ -76,6 +82,7 @@ br.com.navita.connect.portal.emm.dto.InstallStateDTO.INSTALLED=Casa</textarea>
         async function translateText() {
             let textoASerTraduzido = document.getElementById("inputText").value;
             let idiomaRaiz = "";
+            const useUnicodeConversion = document.getElementById("toggleCheckbox").checked;
 
             const targetLanguages = ['de', 'en_AU', 'en', 'es', 'fr', 'pt'];
             const translationResults = {};
@@ -97,7 +104,7 @@ br.com.navita.connect.portal.emm.dto.InstallStateDTO.INSTALLED=Casa</textarea>
                         if (!translationResults[targetLanguage]) {
                             translationResults[targetLanguage] = [];
                         }
-                        translationResults[targetLanguage].push(convertAccentedToUnicode(translation));
+                        translationResults[targetLanguage].push(useUnicodeConversion ? convertAccentedToUnicode(translation) : translation);
                     } catch (error) {
                         console.error(error);
                         if (!translationResults[targetLanguage]) {
@@ -126,7 +133,7 @@ br.com.navita.connect.portal.emm.dto.InstallStateDTO.INSTALLED=Casa</textarea>
                 const copyButton = document.createElement('button');
                 copyButton.textContent = 'Copiar';
                 copyButton.classList.add('copy-button');
-                copyButton.onclick = function() {
+                copyButton.onclick = function () {
                     copyText(language);
                 };
                 translationDiv.appendChild(copyButton);
